@@ -16,7 +16,7 @@ SRC     := src tests migrations
 
 .PHONY: help venv install env run migrate revision downgrade \
         test lint format check css css-watch \
-        up down logs build clean
+        up up-d down logs build clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -74,7 +74,10 @@ css-watch: ## Rebuild Tailwind CSS on change
 ## --- Docker ----------------------------------------------------------------
 
 up: ## Start the full stack (Postgres + backend + pgAdmin)
-	docker compose up --build
+	docker compose up
+
+up-d: ## Start the full stack in the background (detached)
+	docker compose up -d
 
 down: ## Stop the stack
 	docker compose down
