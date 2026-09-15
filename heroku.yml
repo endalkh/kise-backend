@@ -1,0 +1,18 @@
+# Container deploy (`heroku stack:set container`), reusing the repository Dockerfile.
+#
+# Preferred over the buildpack path here: the image runs `pip install -e .`, so the src-layout
+# package is importable, and the root package.json cannot be mistaken for a Node app.
+#
+# The Dockerfile's CMD binds a fixed :8000, which Heroku would kill — the run command below
+# overrides it to bind the injected $PORT.
+build:
+  docker:
+    web: Dockerfile
+
+release:
+  image: web
+  command:
+    - alembic upgrade head
+
+run:
+  web: uvicorn kise.platform.api.app:app --host 0.0.0.0 --port $PORT

@@ -41,3 +41,40 @@ docker compose up --build           # Postgres + backend (migrates, then serves)
 .venv/bin/python -m pytest -q
 .venv/bin/ruff check src tests migrations
 ```
+
+## Deployment (Heroku via GitHub)
+
+Pushes to `main` deploy automatically: `.github/workflows/deploy-heroku.yml` runs lint and the test
+suite, then pushes to Heroku's git remote. The `Procfile`'s `release` phase applies migrations
+(`alembic upgrade head`) before the new dynos take traffic, and the workflow polls `/health`
+afterwards so a broken release fails the run. `.github/workflows/ci.yml` covers pull requests.
+
+One-time setup:
+
+```bash
+heroku create <app>
+heroku addons:create heroku-postgresql:essential-0 --app <app>
+
+# A root package.json makes Heroku detect Node first — pin the Python buildpack explicitly.
+heroku buildpacks:set heroku/python --app <app>
+
+heroku config:set KISE_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" \
+                  KISE_DEFAULT_CURRENCY=ETB \
+                  KISE_CORS_ORIGINS='["https://your-frontend"]' --app <app>
+```
+
+Then, in GitHub under *Settings → Secrets and variables → Actions*:
+
+| kind     | name              | value                                             |
+| -------- | ----------------- | ------------------------------------------------- |
+| secret   | `HEROKU_API_KEY`  | output of `heroku authorizations:create`          |
+| variable | `HEROKU_APP_NAME` | the Heroku app name                               |
+
+`DATABASE_URL` needs no configuration: the Postgres add-on exports it and `platform/config.py`
+adopts it, rewriting `postgres://` to `postgresql+psycopg://`. Nothing else is required — but do
+narrow `KISE_CORS_ORIGINS` from the `["*"]` default, and note that `KISE_SECRET_KEY` must be set or
+the app boots with the insecure placeholder.
+
+`make deploy` pushes manually (bypassing CI) if you need an escape hatch, and `heroku.yml` is
+included for a container deploy (`heroku stack:set container`) using the repository `Dockerfile`,
+which is the more reliable path if buildpack detection ever gets in the way.

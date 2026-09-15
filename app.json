@@ -1,0 +1,51 @@
+{
+  "name": "kise-backend",
+  "description": "Kise - personal expense tracker API (Ethiopian & Gregorian calendars)",
+  "stack": "heroku-24",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "alembic upgrade head"
+  },
+  "env": {
+    "KISE_SECRET_KEY": {
+      "description": "Signing key for access tokens. Must be a long random string.",
+      "generator": "secret"
+    },
+    "KISE_ACCESS_TOKEN_EXPIRE_MINUTES": {
+      "description": "Access token lifetime in minutes.",
+      "value": "10080"
+    },
+    "KISE_DEFAULT_CURRENCY": {
+      "description": "Three-letter default currency code.",
+      "value": "ETB"
+    },
+    "KISE_CORS_ORIGINS": {
+      "description": "JSON list of allowed CORS origins. Narrow this to the app's real origins.",
+      "value": "[\"*\"]"
+    },
+    "KISE_APP_STORE_URL": {
+      "description": "Landing page App Store link; leave empty until a build is published.",
+      "value": "",
+      "required": false
+    },
+    "KISE_PLAY_STORE_URL": {
+      "description": "Landing page Play Store link; leave empty until a build is published.",
+      "value": "",
+      "required": false
+    },
+    "KISE_APP_DOWNLOAD_URL": {
+      "description": "Direct download link (APK, TestFlight, GitHub release).",
+      "value": "",
+      "required": false
+    }
+  }
+}

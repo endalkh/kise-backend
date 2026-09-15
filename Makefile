@@ -16,7 +16,8 @@ SRC     := src tests migrations
 
 .PHONY: help venv install env run migrate revision downgrade \
         test lint format check css css-watch \
-        up up-d down logs build clean
+        up up-d down logs build clean \
+        heroku-setup deploy heroku-logs heroku-migrate heroku-open
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -87,6 +88,29 @@ logs: ## Tail the backend container logs
 
 build: ## Build the Docker images
 	docker compose build
+
+## --- Heroku ----------------------------------------------------------------
+# Set HEROKU_APP to target an app explicitly: make deploy HEROKU_APP=kise-api
+
+HEROKU_APP ?=
+HEROKU_FLAGS := $(if $(HEROKU_APP),--app $(HEROKU_APP),)
+
+heroku-setup: ## Pin the Python buildpack and attach Postgres (run once)
+	heroku buildpacks:set heroku/python $(HEROKU_FLAGS)
+	heroku addons:create heroku-postgresql:essential-0 $(HEROKU_FLAGS)
+	heroku config:set KISE_SECRET_KEY=$$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))') $(HEROKU_FLAGS)
+
+deploy: ## Push the current branch to Heroku (runs migrations in the release phase)
+	git push heroku $$(git rev-parse --abbrev-ref HEAD):main
+
+heroku-logs: ## Tail Heroku logs
+	heroku logs --tail $(HEROKU_FLAGS)
+
+heroku-migrate: ## Run migrations on Heroku manually
+	heroku run alembic upgrade head $(HEROKU_FLAGS)
+
+heroku-open: ## Open the deployed app in a browser
+	heroku open $(HEROKU_FLAGS)
 
 ## --- Housekeeping ----------------------------------------------------------
 
