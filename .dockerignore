@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.db
+.env
+.git/
+# The Tailwind CLI is a dev tool; the compiled static/styles/app.css is committed and copied in as-is.
+node_modules/
+package.json
+package-lock.json

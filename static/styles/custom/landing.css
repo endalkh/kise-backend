@@ -1,0 +1,292 @@
+/*
+ * Page-specific styles: the 3D phone scene in the hero (tilted device, parallax layers, floating
+ * glass receipts, a spinning coin), the chips, the 13-month grid, and the mock-up's light theme.
+ * Imported by ../source/main.css.
+ */
+
+@layer components {
+
+/* ---------------------------------------------------------------------------------------------
+ * The scene. A perspective root; index.html writes --px/--py (pointer offset, -1..1) onto it and
+ * --rx/--ry onto the phone. Every [data-depth] child slides by its depth, so layers separate as
+ * the pointer moves — negative depths sit "behind" the phone and move the other way.
+ * ------------------------------------------------------------------------------------------- */
+/* No preserve-3d here: each layer is flattened so DOM order and z-index decide what is in front.
+   Only the phone itself keeps a 3D context, for its side face. */
+.scene {
+  perspective: 1800px;
+}
+[data-depth] {
+  translate: calc(var(--px, 0) * var(--depth, 0) * 18px) calc(var(--py, 0) * var(--depth, 0) * 18px);
+  transition: translate 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.scene.is-live [data-depth] {
+  transition: none;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * The phone. Pure CSS — a faithful sketch of the dashboard, not a screenshot, so it stays crisp
+ * at every size. Tilted in 3D with a visible side face; the wrapper floats, the device tilts.
+ * ------------------------------------------------------------------------------------------- */
+.phone-float {
+  position: relative;
+  z-index: 10;
+}
+.phone {
+  width: 320px;
+  aspect-ratio: 320 / 680;
+  border-radius: var(--radius-phone);
+  padding: 10px;
+  background: linear-gradient(160deg, #26332c, #0b120e 60%, #1a2620);
+  box-shadow: var(--shadow-phone);
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 6deg)) rotateY(var(--ry, -16deg)) rotateZ(-1.5deg);
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.scene.is-live .phone {
+  transition: transform 0.12s linear;
+}
+.phone::before {
+  /* Bezel highlight */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, #ffffff8c, #ffffff0d 40%, #ffffff40);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.phone::after {
+  /* The device's side face, revealed by the Y tilt. */
+  content: "";
+  position: absolute;
+  top: 26px;
+  bottom: 26px;
+  right: -9px;
+  width: 10px;
+  border-radius: 0 6px 6px 0;
+  background: linear-gradient(90deg, #1b2620, #37463d 40%, #0e1510);
+  transform: translateZ(-6px) rotateY(20deg);
+  transform-origin: left center;
+}
+.phone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: calc(var(--radius-phone) - 10px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-page-deep);
+
+  /* The app is light. Re-declare the tokens the mock-up's utilities read, so the screen keeps the
+     app's neutrals while the page around it is dark. */
+  --color-page-deep: #eef4f0;
+  --color-card: #ffffff;
+  --color-ink: #191b1a;
+  --color-ink-muted: #5c625e;
+  --color-ink-faint: #8d948f;
+  --color-line-soft: #e9f0eb;
+  --color-forest: #078930;
+  --color-forest-deep: #0b5a34;
+  --color-forest-50: #edf7f0;
+  --color-gold: #c98500;
+  --color-gold-deep: #9a6600;
+  --color-gold-50: #fdf5e4;
+  /* Inherited colour was resolved at <body>; re-resolve it here so untinted text is dark again. */
+  color: var(--color-ink);
+}
+.phone-screen::after {
+  /* A faint glare across the glass — enough to read as a screen, not enough to hide a figure. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: linear-gradient(115deg, #ffffff00 35%, #ffffff12 50%, #ffffff00 58%);
+}
+.phone-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  translate: -50% 0;
+  width: 92px;
+  height: 26px;
+  border-radius: 999px;
+  background: #0c130f;
+  z-index: 5;
+}
+.phone-hero {
+  padding: 52px 18px 96px;
+  color: white;
+  position: relative;
+  background-image: linear-gradient(135deg, #0b5a34 0%, #1b944f 100%);
+}
+.phone-summary {
+  margin: -84px 14px 0;
+  position: relative;
+  z-index: 2;
+}
+.mini-card {
+  @apply rounded-[20px] bg-white;
+  box-shadow: 0 1px 2px #0b5a340d, 0 10px 26px -12px #0b5a3440;
+}
+.mini-bar {
+  @apply w-full rounded-[3px];
+  background: color-mix(in srgb, var(--color-gold) 85%, white);
+}
+.mini-bar.is-low {
+  background: color-mix(in srgb, var(--color-gold) 30%, white);
+}
+.mini-bar.is-today {
+  background: var(--color-forest);
+}
+/* Pinned to the bottom of the screen; the cards scroll away behind it, under a soft fade. */
+.mini-nav {
+  @apply absolute inset-x-0 bottom-0 z-10 flex items-center justify-around border-t border-line-soft
+    bg-white px-2 pt-2 pb-5;
+}
+.mini-nav::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 100% 0;
+  height: 28px;
+  background: linear-gradient(to top, var(--color-page-deep), transparent);
+  pointer-events: none;
+}
+.mini-nav span {
+  @apply flex flex-col items-center gap-1 text-[9px] font-semibold text-ink-faint;
+}
+.mini-nav span.is-on {
+  @apply text-forest;
+}
+.mini-nav span.is-on i {
+  background: color-mix(in srgb, var(--color-forest) 14%, white);
+}
+.mini-nav i {
+  @apply block h-5 w-9 rounded-full;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Floating glass receipts behind the phone — the day-to-day entries — and the chips in front.
+ * ------------------------------------------------------------------------------------------- */
+.receipt {
+  @apply absolute z-0 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-ink;
+  background: #ffffff0f;
+  border: 1px solid #ffffff1f;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 #ffffff1a inset, 0 30px 60px -24px #000000cc;
+}
+.receipt .amt {
+  @apply ml-2 font-bold tabular;
+}
+.receipt .amt.is-paid {
+  @apply text-forest-bright;
+}
+.receipt-dot {
+  @apply size-2.5 shrink-0 rounded-full;
+  box-shadow: 0 0 12px currentColor;
+}
+.chip {
+  @apply absolute z-20 flex items-center gap-3 px-4 py-3 text-sm;
+  box-shadow: var(--shadow-lift);
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * The coin — Kise's mark. A real cylinder: two faces plus rim slices, each rotated about Z, pushed
+ * out to the radius and tipped 90° so its height runs along the coin's thickness. Spins about Y.
+ * Sized by --r (radius) and --t (thickness); the template picks the slice count and sets --step.
+ * Hero only — the logo in the nav, footer, favicon and app is the flat static/coin.svg.
+ * ------------------------------------------------------------------------------------------- */
+.coin {
+  --r: 58px;
+  --t: 14px;
+  --step: 15deg;
+  --w: 16px;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  perspective: 900px;
+  flex: none;
+}
+.hero-coin {
+  position: absolute;
+  z-index: 0;
+  filter: drop-shadow(0 30px 40px #00000099);
+}
+.coin-spin {
+  animation: none;
+  transform: rotateX(-18deg) rotateZ(-8deg) rotateY(-32deg);
+}
+
+.coin-spin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: coin-spin 9s linear infinite;
+}
+.coin-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-ethiopic);
+  font-weight: 700;
+  font-size: calc(var(--r) * 0.8);
+  line-height: 1;
+  color: #7a4d00;
+  text-shadow: 0 1px 0 #ffe9a8;
+  background:
+    radial-gradient(circle at 35% 30%, #ffe9a8, #f2b234 50%, #c98500 80%, #9a6600);
+  box-shadow:
+    0 0 0 6px #ffffff33 inset,
+    0 0 0 8px #b97a0a inset;
+  backface-visibility: hidden;
+}
+.coin-front {
+  transform: translateZ(calc(var(--t) / 2));
+}
+.coin-back {
+  transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
+}
+.coin-edge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--w);
+  height: var(--t);
+  margin-left: calc(var(--w) / -2);
+  margin-top: calc(var(--t) / -2);
+  background: linear-gradient(#e0a52a, #9a6600);
+  transform: rotateZ(calc(var(--i) * var(--step))) translateY(var(--r)) rotateX(90deg);
+}
+
+/* 13-month strip in the calendar section. */
+.month {
+  @apply relative flex flex-col justify-between rounded-2xl border border-line-soft bg-card/70 p-3
+    text-left transition-all duration-300;
+  min-height: 92px;
+}
+.month:hover {
+  @apply border-forest/50 bg-forest-50;
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -20px #22c06966;
+}
+.month .am {
+  @apply font-ethiopic text-[15px] leading-tight font-semibold text-ink;
+}
+.month .days {
+  @apply mt-3 text-[11px] font-semibold tracking-wide text-ink-faint uppercase tabular;
+}
+.month.is-pagume {
+  @apply border-gold/50 bg-gold-50;
+}
+.month.is-pagume .days {
+  @apply text-gold-deep;
+}
+}

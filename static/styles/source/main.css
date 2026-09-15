@@ -1,0 +1,150 @@
+/*
+ * Kise landing page — Tailwind entry point.
+ *
+ *   static/styles/
+ *   ├── source/main.css   this file: Tailwind, the design tokens, base styles, and the imports below
+ *   ├── custom/           hand-written CSS — components.css (buttons, cards, tiles, tilt) and
+ *   │                     landing.css (the 3D phone scene, coin, month grid, scroll reveal)
+ *   └── app.css           the build output, committed, served at /static/styles/app.css
+ *
+ * Build with `make web-css`. The markup it styles is backend/templates/index.html.
+ *
+ * Colour: a dark, deep-green page with one emerald primary and one gold accent — the same two hues
+ * as the app's forest palette (app/lib/platform/theme.dart), pushed brighter so they glow on dark.
+ * The phone mock-up keeps the app's light neutrals; landing.css re-declares the tokens inside it.
+ */
+@import "tailwindcss";
+@source "../../../templates";
+
+@import "../custom/components.css";
+@import "../custom/landing.css";
+
+@theme {
+  /* Type. Plus Jakarta Sans for Latin, Noto Sans Ethiopic falls in for Amharic glyphs, and one
+     serif — Instrument Serif — reserved for a single italic word per heading. */
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Ethiopic", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", "Noto Serif Ethiopic", Georgia, serif;
+  --font-ethiopic: "Noto Sans Ethiopic", "Kefa", "Abyssinica SIL", system-ui, sans-serif;
+
+  /* Neutrals — a deep but readable green page, glass cards a step lighter, near-white ink. */
+  --color-page: #0f1f16;
+  --color-page-deep: #152a1e;
+  --color-card: #1a3226;
+  --color-ink: #f3f8f4;
+  --color-ink-muted: #a9bcaf;
+  --color-ink-faint: #7a8f81;
+  --color-ink-inverse: #0b1510;
+  --color-line: #ffffff2b;
+  --color-line-soft: #ffffff1a;
+
+  /* Emerald — the primary. */
+  --color-forest: #22c069;
+  --color-forest-deep: #0b5a34;
+  --color-forest-bright: #3fe08a;
+  --color-forest-night: #0a3a24;
+  --color-forest-ink: #06301c;
+  --color-forest-50: #22c0691a;
+  --color-forest-100: #22c0692e;
+  --color-forest-200: #8fe9b6;
+
+  /* Gold — the accent, for day-to-day spending and small highlights. Nothing else is gold. */
+  --color-gold: #f2b234;
+  --color-gold-deep: #ffd47a;
+  --color-gold-50: #f2b2341f;
+  --color-gold-100: #f2b23433;
+
+  /* Category colours, from sample_data.dart. */
+  --color-cat-blue: #4a90e8;
+  --color-cat-orange: #eb6834;
+  --color-cat-aqua: #1baf7a;
+  --color-cat-yellow: #eda100;
+  --color-cat-magenta: #e87ba4;
+
+  /* The other three selectable palettes, for the theme-swatch tile. */
+  --color-sunset: #e65100;
+  --color-wine: #7b1e3a;
+  --color-ocean: #1e5aa8;
+
+  --radius-card: 1.5rem;
+  --radius-phone: 3.25rem;
+
+  --shadow-card: 0 1px 0 #ffffff0a inset, 0 20px 60px -20px #00000099;
+  --shadow-lift: 0 1px 0 #ffffff14 inset, 0 40px 90px -30px #000000cc;
+  --shadow-phone: 0 60px 140px -30px #000000e6, 0 0 0 1px #ffffff14 inset;
+
+  --animate-float: float 8s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out 1.5s infinite;
+  --animate-rise: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-coin: coin-spin 9s linear infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes coin-spin {
+    from { transform: rotateY(0deg) rotateX(-8deg); }
+    to { transform: rotateY(360deg) rotateX(-8deg); }
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-page font-sans text-ink antialiased;
+    font-feature-settings: "ss01", "cv11";
+    /* Two soft glows — emerald high, gold low — behind everything. */
+    background-image:
+      radial-gradient(900px 600px at 85% -5%, #22c06938, transparent 60%),
+      radial-gradient(700px 500px at -10% 40%, #f2b2341a, transparent 60%);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background: #22c06966;
+    color: #ffffff;
+  }
+  :focus-visible {
+    outline: 3px solid #22c069aa;
+    outline-offset: 3px;
+    border-radius: 0.5rem;
+  }
+  /* A light band. Sections carrying .light re-declare the tokens the utilities read, so the same
+     markup renders dark ink on warm cream — the page alternates dark green and cream. */
+  .light {
+    --color-page: #f5f2e9;
+    --color-page-deep: #ebe7da;
+    --color-card: #ffffff;
+    --color-ink: #16201a;
+    --color-ink-muted: #5b6a61;
+    --color-ink-faint: #8b978f;
+    --color-line: #16201a24;
+    --color-line-soft: #16201a14;
+    --color-forest: #078930;
+    --color-forest-bright: #0b8a3f;
+    --color-forest-50: #0789301a;
+    --color-forest-200: #0b5a34;
+    --color-gold-deep: #9a6600;
+    --color-gold-50: #f2b23429;
+    --shadow-card: 0 1px 2px #0b5a340d, 0 20px 50px -24px #0b5a3440;
+    color: var(--color-ink);
+    background-color: var(--color-page);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

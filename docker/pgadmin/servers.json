@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Kise (db)",
+      "Group": "Servers",
+      "Host": "db",
+      "Port": 5432,
+      "MaintenanceDB": "kise",
+      "Username": "kise",
+      "SSLMode": "prefer",
+      "Comment": "The Kise Postgres service. Password is POSTGRES_PASSWORD from .env (default: kise)."
+    }
+  }
+}

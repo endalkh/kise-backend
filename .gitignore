@@ -1,0 +1,29 @@
+# --- python ------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# --- secrets & local databases ----------------------------------------
+# `.env.example` is committed; real env files and local DBs are not.
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+
+# --- landing page toolchain (Tailwind CLI) ----------------------------
+node_modules/
+
+# --- editors ----------------------------------------------------------
+.idea/
+.vscode/
+*.iml
+.DS_Store

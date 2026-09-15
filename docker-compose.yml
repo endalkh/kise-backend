@@ -1,0 +1,76 @@
+# Kise — local stack: PostgreSQL + the FastAPI backend + pgAdmin.
+#
+#   cp .env.example .env      # once
+#   docker compose up --build
+#
+# Every value comes from .env, so credentials live in one place. The backend waits for Postgres to
+# be healthy, runs Alembic migrations, then serves on :${BACKEND_PORT}. pgAdmin is at
+# :${PGADMIN_PORT} and comes pre-wired to the 'db' server.
+#
+# The database is the source of truth Kise runs on; SQLite remains only for the test suite.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - kise_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # DATABASE_URL from .env targets the 'db' service; feed it to the app as KISE_DATABASE_URL.
+      KISE_DATABASE_URL: ${DATABASE_URL}
+      KISE_SECRET_KEY: ${KISE_SECRET_KEY}
+      KISE_DEFAULT_CURRENCY: ${KISE_DEFAULT_CURRENCY}
+      KISE_CORS_ORIGINS: ${KISE_CORS_ORIGINS}
+      KISE_ACCESS_TOKEN_EXPIRE_MINUTES: ${KISE_ACCESS_TOKEN_EXPIRE_MINUTES}
+      KISE_APP_STORE_URL: ${KISE_APP_STORE_URL:-}
+      KISE_PLAY_STORE_URL: ${KISE_PLAY_STORE_URL:-}
+      KISE_APP_DOWNLOAD_URL: ${KISE_APP_DOWNLOAD_URL:-}
+    ports:
+      - "${BACKEND_PORT}:8000"
+    # Migrate, then serve. Migrations own the schema in a real environment (not create_all).
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn kise.platform.api.app:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      # Skip the "add a server" wizard: the 'db' connection is pre-loaded from servers.json below.
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT}:80"
+    volumes:
+      - kise_pgadmin:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+
+volumes:
+  kise_pgdata:
+  kise_pgadmin:

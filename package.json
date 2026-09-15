@@ -1,0 +1,14 @@
+{
+  "name": "kise-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tailwind toolchain for the Kise landing page (templates/index.html). Compiles static/styles/source/main.css (+ custom/) to static/styles/app.css.",
+  "scripts": {
+    "css": "tailwindcss -i static/styles/source/main.css -o static/styles/app.css --minify",
+    "css:watch": "tailwindcss -i static/styles/source/main.css -o static/styles/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

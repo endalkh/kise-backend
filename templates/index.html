@@ -1,0 +1,529 @@
+{#-
+  Kise landing page, served at `/` by kise.platform.api.landing.
+
+  Styling comes from /static/styles/app.css, built from static/styles/source/main.css by `make web-css`.
+  Context: download_url · app_store_url · play_store_url (any may be empty), docs_path, style_path,
+  static_path.
+  When no URL is configured at all, the download buttons collapse into one honest "coming soon".
+-#}
+{%- set has_any_download = download_url or app_store_url or play_store_url -%}
+{#- The mark: a flat gold coin with ኪ, one SVG shared with the favicon and the mobile app. -#}
+{%- macro mark(class) -%}
+<img src="{{ static_path }}/coin.svg" class="{{ class }}" alt="" width="44" height="44" decoding="async">
+{%- endmacro -%}
+{#- The 3D coin, hero only. `slices` is the rim resolution. -#}
+{%- macro coin(front, back, slices, class) -%}
+<div class="coin {{ class }}" aria-hidden="true">
+  <div class="coin-spin">
+    <div class="coin-face coin-front">{{ front }}</div>
+    <div class="coin-face coin-back">{{ back }}</div>
+    {% for i in range(slices) %}<i class="coin-edge" style="--i:{{ i }}"></i>{% endfor %}
+  </div>
+</div>
+{%- endmacro -%}
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ኪሴ · Kise — an expense tracker that speaks your calendar</title>
+  <meta name="description" content="Kise separates fixed monthly commitments from day-to-day spending and treats the Ethiopian calendar — መስከረም to ጳጉሜን — as a first-class citizen next to the Gregorian one. Free, in Amharic and English, for iOS and Android.">
+  <meta name="theme-color" content="#0b5a34">
+  <meta property="og:title" content="ኪሴ · Kise — know where the month went">
+  <meta property="og:description" content="Fixed commitments apart from day-to-day spending. Ethiopian and Gregorian calendars, both first-class. ETB by default.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="{{ static_path }}/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="{{ style_path }}/app.css">
+  <script>document.documentElement.classList.remove('no-js')</script>
+</head>
+<body class="overflow-x-clip">
+
+  <!-- ───────────────────────── Nav ───────────────────────── -->
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-page-deep/85 shadow-[0_1px_0_#ffffff0a_inset] backdrop-blur-xl transition-colors [&.is-stuck]:border-white/15 [&.is-stuck]:bg-page-deep/95" id="nav">
+    <nav class="wrap flex h-16 items-center justify-between" aria-label="Primary">
+      <a href="#top" class="flex items-center gap-3 font-bold tracking-tight text-ink" aria-label="Kise — home">
+        {{ mark('size-11 drop-shadow-[0_6px_12px_#f2b23459]') }}
+        <span>Kise</span>
+        <span class="hidden font-ethiopic text-ink-muted/80 sm:inline">· ኪሴ</span>
+      </a>
+      <div class="hidden items-center gap-1 md:flex">
+        <a class="nav-link" href="#features">Features</a>
+        <a class="nav-link" href="#calendar">Calendar</a>
+        <a class="nav-link" href="#how">How it works</a>
+        <a class="nav-link" href="{{ docs_path }}">API</a>
+      </div>
+      <a class="btn-primary !py-2.5 !text-[13px]" href="#download">Get the app</a>
+    </nav>
+  </header>
+
+  <main id="top">
+
+    <!-- ───────────────────────── Hero ───────────────────────── -->
+    <section class="relative isolate overflow-hidden pt-14 pb-24 sm:pt-20 lg:pt-24 lg:pb-32">
+      <div class="bg-grid absolute inset-0 -z-10" aria-hidden="true"></div>
+      <div class="absolute -top-40 left-1/2 -z-10 h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-forest/15 blur-3xl" aria-hidden="true"></div>
+
+      <div class="wrap grid items-center gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
+        <!-- Copy -->
+        <div class="max-w-xl">
+          <p class="eyebrow animate-rise"><span class="dot"></span> Built for Ethiopia · ETB first</p>
+          <h1 class="mt-7 text-balance text-[2.75rem] leading-[1.02] font-extrabold tracking-[-0.03em] text-ink animate-rise [animation-delay:80ms] sm:text-6xl lg:text-[4.25rem]">
+            Know where the month went. In <span class="accent-word">your</span> calendar.
+          </h1>
+          <p class="mt-7 max-w-lg text-pretty text-lg leading-relaxed text-ink-muted animate-rise [animation-delay:160ms] sm:text-xl">
+            Kise keeps rent and school fees apart from taxi and coffee, and counts the month the way you do
+            — <span class="font-ethiopic font-medium text-ink">መስከረም</span> to
+            <span class="font-ethiopic font-medium text-ink">ጳጉሜን</span>, or January to December. Both are real. Neither is an afterthought.
+          </p>
+
+          <div class="mt-10 flex flex-wrap items-center gap-3 animate-rise [animation-delay:240ms]">
+            {% if app_store_url %}
+            <a class="store btn-store" href="{{ app_store_url }}">
+              <svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c.03 2.6 2.28 3.47 2.3 3.48-.02.06-.36 1.24-1.19 2.45-.72 1.05-1.46 2.1-2.63 2.12-1.15.02-1.52-.68-2.84-.68-1.31 0-1.72.66-2.81.7-1.13.04-1.99-1.13-2.71-2.18-1.48-2.14-2.61-6.04-1.09-8.68a4.2 4.2 0 0 1 3.55-2.16c1.11-.02 2.15.75 2.83.75.67 0 1.95-.92 3.28-.79.56.02 2.13.23 3.14 1.7-.08.05-1.87 1.1-1.85 3.29ZM14.2 6.2c.6-.72 1-1.73.89-2.73-.86.03-1.9.57-2.51 1.29-.55.64-1.04 1.66-.91 2.64.96.07 1.93-.49 2.53-1.2Z"/></svg>
+              <span><small>Download on the</small><strong>App Store</strong></span>
+            </a>
+            {% endif %}
+            {% if play_store_url %}
+            <a class="store btn-store" href="{{ play_store_url }}">
+              <svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.3 2.6c-.3.3-.5.8-.5 1.4v16c0 .6.2 1.1.5 1.4l9.1-9.4-9.1-9.4Zm10.4 8.1 2.5-2.5-9.9-5.7c-.6-.3-1.1-.4-1.5-.2l8.9 8.4Zm0 2.6-8.9 8.4c.4.2.9.1 1.5-.2l9.9-5.7-2.5-2.5Zm5.3-3.8-2.9-1.7-2.9 2.9 2.9 2.9 2.9-1.7c.8-.5.8-1.9 0-2.4Z"/></svg>
+              <span><small>Get it on</small><strong>Google Play</strong></span>
+            </a>
+            {% endif %}
+            {% if download_url %}
+            <a class="store {% if app_store_url or play_store_url %}btn-ghost{% else %}btn-primary{% endif %}" href="{{ download_url }}">
+              <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              <span><small>Direct download</small><strong>Download the app</strong></span>
+            </a>
+            {% endif %}
+            {% if not has_any_download %}
+            <span class="store btn-ghost cursor-not-allowed opacity-80" aria-disabled="true" title="A public build is not out yet">
+              <svg class="size-6 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              <span><small>iOS &amp; Android</small><strong>Download — coming soon</strong></span>
+            </span>
+            {% endif %}
+          </div>
+
+          <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-muted animate-rise [animation-delay:320ms]">
+            <li class="flex items-center gap-2"><svg class="size-4 text-forest" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg> Free</li>
+            <li class="flex items-center gap-2"><svg class="size-4 text-forest" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg> Amharic &amp; English</li>
+            <li class="flex items-center gap-2"><svg class="size-4 text-forest" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg> Calendar works offline</li>
+          </ul>
+        </div>
+
+        <!-- Phone: a 3D scene. Each layer carries data-depth; the pointer slides them apart and tilts
+             the device (script at the bottom). Negative depths sit behind the phone. -->
+        <div class="scene relative mx-auto flex w-full max-w-[480px] justify-center py-8 lg:py-0" data-scene aria-hidden="true">
+          <div class="absolute inset-x-4 top-1/2 -z-10 h-[75%] -translate-y-1/2 rounded-[40%] bg-forest/30 blur-3xl"></div>
+
+          <!-- behind the phone: a spinning birr coin and three day-to-day receipts -->
+          <div class="-left-4 top-0 hidden sm:block lg:-left-16 hero-coin" data-depth style="--depth:-2.2">
+            {{ coin('ኪ', 'ብር', 24, '') }}
+          </div>
+          <div class="receipt -right-2 top-[44%] hidden animate-float-slow sm:flex lg:-right-24" data-depth style="--depth:-1.4">
+            <i class="receipt-dot bg-cat-orange text-cat-orange"></i><span><span class="font-ethiopic">ቡና</span> · Coffee</span><span class="amt">ብር 45</span>
+          </div>
+          <div class="receipt -left-6 top-[58%] hidden animate-float sm:flex lg:-left-24" data-depth style="--depth:-1; animation-delay:-4s">
+            <i class="receipt-dot bg-cat-aqua text-cat-aqua"></i><span><span class="font-ethiopic">ታክሲ</span> · Taxi</span><span class="amt">ብር 120</span>
+          </div>
+          <div class="receipt -right-6 bottom-4 hidden animate-float-slow sm:flex lg:-right-28" data-depth style="--depth:-0.6; animation-delay:-7s">
+            <i class="receipt-dot bg-cat-yellow text-cat-yellow"></i><span><span class="font-ethiopic">ኢንተርኔት</span> · Internet</span><span class="amt is-paid">✓ ብር 1,200</span>
+          </div>
+
+          <div class="phone-float animate-float" data-depth style="--depth:0.3">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="phone-island"></div>
+
+              <!-- hero header -->
+              <div class="phone-hero">
+                <div class="flex items-center justify-between">
+                  <span class="font-ethiopic text-[13px] font-semibold tracking-wide text-white/80">ኪሴ</span>
+                  <span class="flex gap-1.5">
+                    <i class="block size-6 rounded-full bg-white/15"></i>
+                    <i class="block size-6 rounded-full bg-white/15"></i>
+                  </span>
+                </div>
+                <p class="mt-5 font-ethiopic text-[19px] leading-tight font-bold">እንደምን አሉ, አበበ!</p>
+                <p class="mt-1 text-[12px] text-white/75">ቅዳሜ, <span class="font-ethiopic">ነሐሴ</span> 30, 2018 · Sat 5 Sep 2026</p>
+                <div class="mt-4 flex items-center justify-between rounded-full bg-white/12 px-2 py-1.5 text-[12px] font-semibold">
+                  <span class="inline-flex size-6 items-center justify-center rounded-full bg-white/15">‹</span>
+                  <span><span class="font-ethiopic">ነሐሴ</span> 2018 <span class="font-normal text-white/65">· Aug 7 – Sep 5</span></span>
+                  <span class="inline-flex size-6 items-center justify-center rounded-full bg-white/15">›</span>
+                </div>
+              </div>
+
+              <!-- summary card -->
+              <div class="phone-summary mini-card p-4">
+                <p class="font-ethiopic text-[10.5px] font-medium text-ink-muted">የወሩ ጠቅላላ ወጪ · 42 ወጪዎች</p>
+                <p class="mt-1 text-[26px] leading-none font-extrabold tracking-tight tabular"><span class="font-ethiopic text-[15px] font-semibold text-ink-muted">ብር</span> 18,450</p>
+                <div class="mt-3 flex items-center justify-between text-[10px] text-ink-muted">
+                  <span>74% <span class="font-ethiopic">ከገደብ</span></span>
+                  <span class="text-forest font-semibold">6,550 <span class="font-ethiopic">ይቀራል</span></span>
+                </div>
+                <div class="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-page-deep">
+                  <span class="w-[38%] rounded-l-full bg-forest"></span>
+                  <span class="w-[36%] bg-gold"></span>
+                </div>
+                <div class="mt-3.5 grid grid-cols-2 gap-2.5">
+                  <div class="rounded-xl bg-forest-50 px-3 py-2.5">
+                    <p class="flex items-center gap-1.5 text-[10px] font-semibold whitespace-nowrap text-forest-deep"><i class="size-1.5 shrink-0 rounded-full bg-forest"></i>Fixed</p>
+                    <p class="mt-1 text-[15px] font-bold tracking-tight tabular">9,500</p>
+                    <p class="font-ethiopic text-[9.5px] text-ink-muted">ቋሚ · ተከፍሏል</p>
+                  </div>
+                  <div class="rounded-xl bg-gold-50 px-3 py-2.5">
+                    <p class="flex items-center gap-1.5 text-[10px] font-semibold whitespace-nowrap text-gold-deep"><i class="size-1.5 shrink-0 rounded-full bg-gold"></i>Dynamic</p>
+                    <p class="mt-1 text-[15px] font-bold tracking-tight tabular">8,950</p>
+                    <p class="font-ethiopic text-[9.5px] text-ink-muted">ተለዋዋጭ · በየቀኑ</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- daily chart -->
+              <div class="mini-card mx-3.5 mt-3 p-4">
+                <div class="flex items-baseline justify-between">
+                  <p class="text-[11px] font-bold">Day by day</p>
+                  <p class="text-[9.5px] text-ink-muted">avg 298 · peak <span class="font-ethiopic">ነሐሴ</span> 17</p>
+                </div>
+                <div class="mt-3 flex h-12 items-end gap-[3px]">
+                  <span class="mini-bar h-[35%]"></span><span class="mini-bar h-[20%] is-low"></span><span class="mini-bar h-[48%]"></span><span class="mini-bar h-[28%]"></span><span class="mini-bar h-[12%] is-low"></span><span class="mini-bar h-[55%]"></span><span class="mini-bar h-[40%]"></span><span class="mini-bar h-[22%] is-low"></span><span class="mini-bar h-[64%]"></span><span class="mini-bar h-[30%]"></span><span class="mini-bar h-[18%] is-low"></span><span class="mini-bar h-[46%]"></span><span class="mini-bar h-[38%]"></span><span class="mini-bar h-[26%]"></span><span class="mini-bar h-[15%] is-low"></span><span class="mini-bar h-[58%]"></span><span class="mini-bar h-[100%]"></span><span class="mini-bar h-[42%]"></span><span class="mini-bar h-[24%] is-low"></span><span class="mini-bar h-[33%]"></span><span class="mini-bar h-[50%]"></span><span class="mini-bar h-[20%] is-low"></span><span class="mini-bar h-[44%]"></span><span class="mini-bar h-[36%]"></span><span class="mini-bar h-[28%]"></span><span class="mini-bar h-[16%] is-low"></span><span class="mini-bar h-[52%]"></span><span class="mini-bar h-[39%]"></span><span class="mini-bar h-[31%]"></span><span class="mini-bar h-[45%] is-today"></span>
+                </div>
+              </div>
+
+              <!-- categories -->
+              <div class="mini-card mx-3.5 mt-3 p-4">
+                <p class="text-[11px] font-bold"><span class="font-ethiopic">በምድብ</span> · By category</p>
+                <ul class="mt-2.5 space-y-2 text-[11px]">
+                  <li class="flex items-center gap-2"><i class="size-2 rounded-full bg-cat-blue"></i><span class="font-ethiopic">ቤት ኪራይ</span><span class="ml-auto font-semibold tabular">7,000</span></li>
+                  <li class="flex items-center gap-2"><i class="size-2 rounded-full bg-cat-orange"></i><span class="font-ethiopic">ምግብ</span><span class="ml-auto font-semibold tabular">4,320</span></li>
+                  <li class="flex items-center gap-2"><i class="size-2 rounded-full bg-cat-aqua"></i><span class="font-ethiopic">ትራንስፖርት</span><span class="ml-auto font-semibold tabular">2,860</span></li>
+                  <li class="flex items-center gap-2"><i class="size-2 rounded-full bg-cat-yellow"></i><span class="font-ethiopic">ካርድና ኢንተርኔት</span><span class="ml-auto font-semibold tabular">2,500</span></li>
+                </ul>
+              </div>
+
+              <div class="mini-nav">
+                <span class="is-on"><i></i>Home</span>
+                <span><i></i>Expenses</span>
+                <span><i></i>Fixed</span>
+                <span><i></i>Settings</span>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <!-- in front of the phone: two chips -->
+          <div class="chip -left-2 bottom-24 hidden animate-float-slow sm:flex lg:-left-10" data-depth style="--depth:1.3">
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-cat-blue/12 text-cat-blue">
+              <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>
+            </span>
+            <span>
+              <span class="block font-semibold"><span class="font-ethiopic">ቤት ኪራይ</span> · Rent</span>
+              <span class="block text-xs text-ink-muted">Every <span class="font-ethiopic">ሐምሌ</span> 1 · never drifts</span>
+            </span>
+          </div>
+          <div class="chip -right-2 top-16 hidden animate-float sm:flex lg:-right-8 [animation-delay:-3s]" data-depth style="--depth:1.6">
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-gold/12 text-gold-deep font-display text-xl italic">13</span>
+            <span>
+              <span class="block font-semibold">13 months</span>
+              <span class="block text-xs text-ink-muted"><span class="font-ethiopic">ጳጉሜን</span> · 5 days this year</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── The 13 months ───────────────────────── -->
+    <div class="border-y border-line-soft bg-card/60 py-5">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-5 font-ethiopic text-[15px] font-semibold text-ink-muted/80 sm:gap-x-5 sm:text-base" aria-label="The thirteen Ethiopian months">
+        {%- set months = ['መስከረም','ጥቅምት','ኅዳር','ታኅሣሥ','ጥር','የካቲት','መጋቢት','ሚያዝያ','ግንቦት','ሰኔ','ሐምሌ','ነሐሴ','ጳጉሜን'] -%}
+        {%- for m in months %}
+        <span class="whitespace-nowrap{% if loop.last %} text-gold-deep{% endif %}">{{ m }}</span>{% if not loop.last %}<span class="text-forest/50" aria-hidden="true">·</span>{% endif %}
+        {%- endfor %}
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Features ───────────────────────── -->
+    <section id="features" class="light scroll-mt-20 py-24 sm:py-32">
+      <div class="wrap">
+      <div class="reveal max-w-2xl">
+        <p class="section-kicker">What Kise does</p>
+        <h2 class="section-title text-balance">Two kinds of spending. <span class="accent-word">Two</span> calendars. One clear picture.</h2>
+        <p class="section-lede">Most trackers treat rent and coffee as the same thing, and the Ethiopian calendar as a display setting. Kise does neither.</p>
+      </div>
+
+      <div class="mt-14 grid gap-5 md:grid-cols-6">
+        <!-- tile 1: wide -->
+        <article data-tilt class="tile reveal md:col-span-4"><span class="tilt-glare" aria-hidden="true"></span>
+          <div class="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <span class="tile-icon"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>
+              <h3>Two calendars, one truth</h3>
+              <p>Enter a date as <span class="font-ethiopic font-medium text-ink">ሐምሌ ፲፭</span> or as 22 July. Kise stores one and shows both, exactly, across leap years and century boundaries. A month <em>is</em> an Ethiopian month if you want it to be.</p>
+            </div>
+            <div class="flex items-center gap-4 self-center rounded-2xl bg-ink/5 p-4 text-sm ring-1 ring-ink/10">
+              <div class="text-center">
+                <p class="text-[11px] font-semibold tracking-wide text-ink-faint uppercase">Ethiopian</p>
+                <p class="mt-1 font-ethiopic text-2xl font-bold">ነሐሴ 30</p>
+                <p class="text-xs text-ink-muted">2018</p>
+              </div>
+              <svg class="size-5 shrink-0 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10m0 0-3-3m3 3-3 3M17 16H7m0 0 3 3m-3-3 3-3"/></svg>
+              <div class="text-center">
+                <p class="text-[11px] font-semibold tracking-wide text-ink-faint uppercase">Gregorian</p>
+                <p class="mt-1 text-2xl font-bold">Sep 5</p>
+                <p class="text-xs text-ink-muted">2026</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- tile 2 -->
+        <article data-tilt class="tile reveal md:col-span-2" data-delay="1"><span class="tilt-glare" aria-hidden="true"></span>
+          <span class="tile-icon"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></span>
+          <h3>Fixed apart from everyday</h3>
+          <p>Rent, internet, school fees are commitments. Taxi and coffee are choices. Kise keeps them on separate lines so the total finally means something.</p>
+          <div class="mt-6 space-y-2">
+            <div class="flex items-center gap-3 text-xs font-semibold"><span class="w-14 text-forest-deep">Fixed</span><span class="h-2.5 flex-1 rounded-full bg-ink/10"><span class="block h-full w-[52%] rounded-full bg-forest"></span></span></div>
+            <div class="flex items-center gap-3 text-xs font-semibold"><span class="w-14 text-gold-deep">Dynamic</span><span class="h-2.5 flex-1 rounded-full bg-ink/10"><span class="block h-full w-[48%] rounded-full bg-gold"></span></span></div>
+          </div>
+        </article>
+
+        <!-- tile 3 -->
+        <article data-tilt class="tile reveal md:col-span-2"><span class="tilt-glare" aria-hidden="true"></span>
+          <span class="tile-icon"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
+          <h3>Recurring, without drift</h3>
+          <p>A commitment anchored to <span class="font-ethiopic font-medium text-ink">ሐምሌ</span> produces exactly one occurrence per Ethiopian month, forever. Viewed in a Gregorian month it still lands where you expect.</p>
+        </article>
+
+        <!-- tile 4 -->
+        <article data-tilt class="tile reveal md:col-span-2" data-delay="1"><span class="tilt-glare" aria-hidden="true"></span>
+          <span class="tile-icon"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/><path d="M17 3l4 0 0 4"/></svg></span>
+          <h3>Works offline</h3>
+          <p>The calendar engine runs on your phone. Labels, month boundaries and ጳጉሜን are exact with no signal, and identical to what the server computes.</p>
+        </article>
+
+        <!-- tile 5 -->
+        <article data-tilt class="tile reveal md:col-span-2" data-delay="2"><span class="tilt-glare" aria-hidden="true"></span>
+          <span class="tile-icon"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18M3 12h18"/></svg></span>
+          <h3>Amharic or English</h3>
+          <p>The whole interface, not just the month names. Switch with one tap; your data does not change, only its language.</p>
+          <p class="mt-5 font-ethiopic text-2xl font-bold text-ink">እንደምን አሉ!</p>
+        </article>
+
+        <!-- tile 6: wide, palettes -->
+        <article data-tilt class="tile reveal md:col-span-4"><span class="tilt-glare" aria-hidden="true"></span>
+          <div class="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <span class="tile-icon"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="15.5" cy="10" r="1"/><path d="M12 21a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4"/></svg></span>
+              <h3>Your currency, your colours</h3>
+              <p>One currency per person, ETB by default, counted in whole santim so nothing drifts by a cent. Four palettes — forest, sunset, burgundy, ocean — around the same calm neutrals.</p>
+            </div>
+            <div class="flex gap-3 self-center">
+              <span class="size-12 rounded-2xl bg-forest shadow-[0_10px_24px_-10px_var(--color-forest)] ring-4 ring-forest/15"></span>
+              <span class="size-12 rounded-2xl bg-sunset shadow-[0_10px_24px_-10px_var(--color-sunset)]"></span>
+              <span class="size-12 rounded-2xl bg-wine shadow-[0_10px_24px_-10px_var(--color-wine)]"></span>
+              <span class="size-12 rounded-2xl bg-ocean shadow-[0_10px_24px_-10px_var(--color-ocean)]"></span>
+            </div>
+          </div>
+        </article>
+      </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Calendar ───────────────────────── -->
+    <section id="calendar" class="scroll-mt-20 border-y border-line-soft bg-page-deep/60 py-24 sm:py-32">
+      <div class="wrap">
+        <div class="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <div class="reveal">
+            <p class="section-kicker">The calendar</p>
+            <h2 class="section-title text-balance">Thirteen months, and the <span class="accent-word">thirteenth</span> is not a footnote.</h2>
+            <p class="section-lede">Twelve months of thirty days, then <span class="font-ethiopic font-medium text-ink">ጳጉሜን</span> — five days, six in a leap year. Kise stores every date in Gregorian and derives the Ethiopian view at the edges, so the arithmetic is exact and the labels are always right.</p>
+            <dl class="mt-10 grid gap-6 sm:grid-cols-2">
+              <div>
+                <dt class="text-sm font-bold text-ink">New year on 11 September</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-ink-muted">Or the 12th, in the year before a Gregorian leap year. Kise knows which.</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-bold text-ink">One September, three months</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-ink-muted">September 2026 spans <span class="font-ethiopic">ነሐሴ</span>, <span class="font-ethiopic">ጳጉሜን</span> and <span class="font-ethiopic">መስከረም</span>. Kise labels the whole span.</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="reveal grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-4" data-delay="1">
+            {%- set greg = ['Sep – Oct','Oct – Nov','Nov – Dec','Dec – Jan','Jan – Feb','Feb – Mar','Mar – Apr','Apr – May','May – Jun','Jun – Jul','Jul – Aug','Aug – Sep','Sep'] -%}
+            {%- for m in months %}
+            <div class="month{% if loop.last %} is-pagume{% endif %}">
+              <span class="am">{{ m }}</span>
+              <span class="days">{% if loop.last %}5 · 6 days{% else %}30 days{% endif %}<span class="ml-1.5 font-normal normal-case text-ink-faint/80">{{ greg[loop.index0] }}</span></span>
+            </div>
+            {%- endfor %}
+            <div class="month items-center justify-center border-dashed bg-transparent text-center">
+              <span class="text-xs font-semibold text-ink-faint">13 months<br><span class="font-normal">365 / 366 days</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── How it works ───────────────────────── -->
+    <section id="how" class="light scroll-mt-20 py-24 sm:py-32">
+      <div class="wrap">
+      <div class="reveal max-w-2xl">
+        <p class="section-kicker">How it works</p>
+        <h2 class="section-title text-balance">Set it up once. Then just <span class="accent-word">spend</span>.</h2>
+      </div>
+      <ol class="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+        <li class="reveal">
+          <span class="step-num">01</span>
+          <h3 class="mt-4 text-lg font-bold">Pick your calendar and language</h3>
+          <p class="mt-2 text-[15px] leading-relaxed text-ink-muted">Ethiopian or Gregorian, Amharic or English, ETB or another currency. Change any of them later; your history follows.</p>
+        </li>
+        <li class="reveal" data-delay="1">
+          <span class="step-num">02</span>
+          <h3 class="mt-4 text-lg font-bold">Add your commitments</h3>
+          <p class="mt-2 text-[15px] leading-relaxed text-ink-muted">Rent on <span class="font-ethiopic">ሐምሌ</span> 1, internet on the 15th. Each one recurs by itself, and you tick it off when it is paid.</p>
+        </li>
+        <li class="reveal" data-delay="2">
+          <span class="step-num">03</span>
+          <h3 class="mt-4 text-lg font-bold">Log the day as it happens</h3>
+          <p class="mt-2 text-[15px] leading-relaxed text-ink-muted">Taxi, lunch, airtime. Two taps each. The dashboard shows the month in both calendars, against your budget.</p>
+        </li>
+      </ol>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Download ───────────────────────── -->
+    <section id="download" class="light scroll-mt-20 pb-24 sm:pb-32">
+      <div class="wrap">
+      <div class="download-gradient reveal relative overflow-hidden rounded-[2rem] px-6 py-16 text-white shadow-[0_60px_120px_-40px_#22c06980] sm:px-12 sm:py-20 lg:px-20">
+        <div class="absolute -top-24 -right-16 font-ethiopic text-[22rem] leading-none font-bold text-white/[0.07] select-none" aria-hidden="true">ኪ</div>
+        <div class="relative grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <p class="text-xs font-bold tracking-[0.18em] text-[#ffd47a] uppercase">Get Kise</p>
+            <h2 class="mt-4 text-balance text-3xl leading-[1.05] font-extrabold tracking-[-0.02em] sm:text-5xl">
+              Your month, in your calendar, on your phone.
+            </h2>
+            <p class="mt-5 max-w-lg text-pretty text-base leading-relaxed text-white/70 sm:text-lg">
+              Free on iOS and Android. Your data stays yours: one account, one currency, no ads.
+            </p>
+            <div class="mt-9 flex flex-wrap gap-3">
+              {% if app_store_url %}
+              <a class="store btn-light" href="{{ app_store_url }}">
+                <svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c.03 2.6 2.28 3.47 2.3 3.48-.02.06-.36 1.24-1.19 2.45-.72 1.05-1.46 2.1-2.63 2.12-1.15.02-1.52-.68-2.84-.68-1.31 0-1.72.66-2.81.7-1.13.04-1.99-1.13-2.71-2.18-1.48-2.14-2.61-6.04-1.09-8.68a4.2 4.2 0 0 1 3.55-2.16c1.11-.02 2.15.75 2.83.75.67 0 1.95-.92 3.28-.79.56.02 2.13.23 3.14 1.7-.08.05-1.87 1.1-1.85 3.29ZM14.2 6.2c.6-.72 1-1.73.89-2.73-.86.03-1.9.57-2.51 1.29-.55.64-1.04 1.66-.91 2.64.96.07 1.93-.49 2.53-1.2Z"/></svg>
+                <span><small>Download on the</small><strong>App Store</strong></span>
+              </a>
+              {% endif %}
+              {% if play_store_url %}
+              <a class="store btn-light" href="{{ play_store_url }}">
+                <svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.3 2.6c-.3.3-.5.8-.5 1.4v16c0 .6.2 1.1.5 1.4l9.1-9.4-9.1-9.4Zm10.4 8.1 2.5-2.5-9.9-5.7c-.6-.3-1.1-.4-1.5-.2l8.9 8.4Zm0 2.6-8.9 8.4c.4.2.9.1 1.5-.2l9.9-5.7-2.5-2.5Zm5.3-3.8-2.9-1.7-2.9 2.9 2.9 2.9 2.9-1.7c.8-.5.8-1.9 0-2.4Z"/></svg>
+                <span><small>Get it on</small><strong>Google Play</strong></span>
+              </a>
+              {% endif %}
+              {% if download_url %}
+              <a class="store {% if app_store_url or play_store_url %}border border-white/25 text-white hover:bg-white/10{% else %}btn-light{% endif %}" href="{{ download_url }}">
+                <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                <span><small>Direct download</small><strong>Download the app</strong></span>
+              </a>
+              {% endif %}
+              {% if not has_any_download %}
+              <span class="store border border-white/20 bg-white/10 text-white/80 cursor-not-allowed" aria-disabled="true" title="A public build is not out yet">
+                <svg class="size-6 text-forest-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <span><small>iOS &amp; Android</small><strong>Download — coming soon</strong></span>
+              </span>
+              {% endif %}
+            </div>
+            {% if not has_any_download %}
+            <p class="mt-5 text-sm text-white/55">A public build is being prepared. The API is already live at <a class="underline decoration-white/30 underline-offset-4 hover:text-white" href="{{ docs_path }}">{{ docs_path }}</a>.</p>
+            {% endif %}
+          </div>
+
+          <ul class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-1">
+            <li class="flex items-start gap-3 rounded-2xl bg-white/[0.07] p-4 ring-1 ring-white/10"><span class="mt-0.5 font-ethiopic text-lg leading-none text-forest-200">፩</span><span><span class="block font-semibold">Both calendars, always</span><span class="text-white/60">Switch in a tap. Nothing is re-entered.</span></span></li>
+            <li class="flex items-start gap-3 rounded-2xl bg-white/[0.07] p-4 ring-1 ring-white/10"><span class="mt-0.5 font-ethiopic text-lg leading-none text-forest-200">፪</span><span><span class="block font-semibold">Commitments that recur</span><span class="text-white/60">Anchored to your calendar, never drifting.</span></span></li>
+            <li class="flex items-start gap-3 rounded-2xl bg-white/[0.07] p-4 ring-1 ring-white/10"><span class="mt-0.5 font-ethiopic text-lg leading-none text-forest-200">፫</span><span><span class="block font-semibold">A budget you can read</span><span class="text-white/60">Fixed and day-to-day, side by side, against your limit.</span></span></li>
+          </ul>
+        </div>
+      </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ───────────────────────── Footer ───────────────────────── -->
+  <footer class="border-t border-line-soft bg-card/60">
+    <div class="wrap flex flex-col gap-6 py-10 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2.5">
+        {{ mark('size-9') }}
+        <span><span class="font-bold text-ink">Kise</span> <span class="font-ethiopic">· ኪሴ</span> — spend with clarity.</span>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <a class="hover:text-forest-ink" href="#features">Features</a>
+        <a class="hover:text-forest-ink" href="#calendar">Calendar</a>
+        <a class="hover:text-forest-ink" href="{{ docs_path }}">API documentation</a>
+        <a class="hover:text-forest-ink" href="https://github.com/endalkh/kise">GitHub</a>
+      </div>
+      <p class="text-ink-faint">Built with Flutter and FastAPI.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // Scroll reveal. Anything with .reveal fades up once it enters the viewport.
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+          });
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+      } else {
+        document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('is-in'); });
+      }
+      // 3D. Only for a fine pointer and when motion is allowed; touch devices keep the resting tilt.
+      var fine = matchMedia('(hover: hover) and (pointer: fine)').matches
+        && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var scene = document.querySelector('[data-scene]');
+      if (fine && scene) {
+        var phone = scene.querySelector('.phone');
+        var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, idle;
+        var frame = function () {
+          cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08;
+          scene.style.setProperty('--px', cx.toFixed(3));
+          scene.style.setProperty('--py', cy.toFixed(3));
+          phone.style.setProperty('--ry', (-16 + cx * 14).toFixed(2) + 'deg');
+          phone.style.setProperty('--rx', (6 - cy * 10).toFixed(2) + 'deg');
+          raf = (Math.abs(tx - cx) > 0.002 || Math.abs(ty - cy) > 0.002) ? requestAnimationFrame(frame) : 0;
+        };
+        window.addEventListener('pointermove', function (e) {
+          var r = scene.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > window.innerHeight) return;
+          tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)));
+          ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+          scene.classList.add('is-live');
+          clearTimeout(idle);
+          idle = setTimeout(function () { scene.classList.remove('is-live'); }, 200);
+          if (!raf) raf = requestAnimationFrame(frame);
+        }, { passive: true });
+      }
+      if (fine) {
+        document.querySelectorAll('[data-tilt]').forEach(function (el) {
+          el.addEventListener('pointermove', function (e) {
+            var r = el.getBoundingClientRect();
+            var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+            el.style.setProperty('--gx', (x * 100).toFixed(1) + '%');
+            el.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
+            el.style.transform = 'perspective(1000px) rotateX(' + ((0.5 - y) * 6).toFixed(2) + 'deg) rotateY(' + ((x - 0.5) * 8).toFixed(2) + 'deg) translateY(-2px)';
+          });
+          el.addEventListener('pointerleave', function () { el.style.transform = ''; });
+        });
+      }
+      // Hairline under the nav once the page has scrolled.
+      var nav = document.getElementById('nav');
+      var onScroll = function () { nav.classList.toggle('is-stuck', window.scrollY > 8); };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    })();
+  </script>
+</body>
+</html>
